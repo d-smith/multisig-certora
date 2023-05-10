@@ -48,4 +48,9 @@ contract MultiSigSender {
         (bool success, ) = txn.recipient.call{value: txn.amount}("");
         require(success, "execute transaction failed");
     }
+
+    function getRecipient(uint256 txnNo) view public returns (address)  {
+        SpendTxn storage txn = spendTransactions[txnNo];
+        return txn.recipient;
+    }
 }

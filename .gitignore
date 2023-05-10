@@ -1,3 +1,4 @@
+.certora_internal
 # Compiler files
 cache/
 out/
