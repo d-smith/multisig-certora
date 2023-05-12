@@ -13,7 +13,7 @@ contract MultiSigSender {
     }
 
     // Spend transactions
-    SpendTxn[]  spendTransactions;
+    SpendTxn[]  private spendTransactions;
 
     
 
@@ -27,10 +27,18 @@ contract MultiSigSender {
         || signers[2] ==  s;
     }
 
-    receive() external payable {}
+    receive() external payable {
+        require(msg.sender != address(this));
+    }
     
     function submitSpend(address recipient, uint256 amount) public  {
         uint256 index = spendTransactions.length;
+
+        // From certora counter example in spec 1
+        require (recipient != address(this), "Cannot submit spend from contract to itself");
+        require (recipient != address(0));
+        // From certora counter example in spec 1
+        require (amount > 0, "Spend of zero not allowed");
 
         spendTransactions.push();
         spendTransactions[index].recipient = recipient;
@@ -52,6 +60,11 @@ contract MultiSigSender {
     function getRecipient(uint256 txnNo) view public returns (address)  {
         SpendTxn storage txn = spendTransactions[txnNo];
         return txn.recipient;
+    }
+
+    function getAmount(uint256 txnNo) view public returns (uint256)  {
+        SpendTxn storage txn = spendTransactions[txnNo];
+        return txn.amount;
     }
 
     function balanceOf(address a) view public returns (uint256) {
