@@ -1,22 +1,36 @@
 using MultiSigSender as mss
 
 methods {
-    getRecipient(uint256) returns (address) envfree
+    getRecipient() returns (address) envfree
     balanceOf(address a) returns (uint256) envfree
-    getAmount(uint256 txnNo) returns (uint256)  envfree
+    getAmount() returns (uint256)  envfree
+    getSubmitter() returns (address) envfree
+    getApprovalCount() returns (uint256) envfree
+    getSignatureThreshold() returns (uint256) envfree
+
 }
 
+// States - awaiting transaction, waiting on approvals, spend approved
+definition awaitTransaction() returns bool = 
+    getRecipient() == 0 &&
+    getSubmitter() == 0 &&
+    getAmount() == 0 &&
+    getApprovalCount() == 0;
 
-rule balanceChangesFromCertainFunctions(method f, uint256 txnNo){
-    env e;
-    calldataarg args;
-    mathint userBalanceBefore = balanceOf(mss);
-    f(e, args);
-    mathint userBalanceAfter = balanceOf(mss);
+definition waitingApproval() returns bool = 
+    getRecipient() != 0 &&
+    getSubmitter() != 0 &&
+    getAmount() > 0 &&
+    getApprovalCount() < getSignatureThreshold();
 
-    assert userBalanceBefore != userBalanceAfter => 
-        (f.selector == executeTransaction(uint256).selector ) ||
-        (f.isFallback),
-         "user's balance changed as a result function other than executeTransaction() or receive()";
-}
+definition spendApproved() returns bool = 
+    getRecipient() != 0 &&
+    getSubmitter() != 0 &&
+    getAmount() > 0 &&
+    getApprovalCount() >= getSignatureThreshold();
 
+    
+invariant validStates()
+    awaitTransaction() && !waitingApproval() && !spendApproved()
+    || !awaitTransaction() && waitingApproval() && !spendApproved()
+    || !awaitTransaction() && !waitingApproval() && spendApproved()

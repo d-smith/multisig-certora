@@ -1,6 +1,9 @@
 pragma solidity ^0.8.13;
 
 contract MultiSigSender {
+    // Const
+    uint256 public constant THRESHOLD = 2;
+    
     // Signers
     address[] signers;
 
@@ -8,17 +11,16 @@ contract MultiSigSender {
     struct SpendTxn {
         address recipient;
         uint256 amount;
-        mapping(address => bool) approvals;
+        address submitter;
+        address[] approvals;
         uint256 approvalCount;
     }
 
-    // Spend transactions
-    SpendTxn[]  private spendTransactions;
-
-    
+    // Spend transaction
+    SpendTxn private spendTransaction;
 
     constructor(address[] memory walletSigners) {
-        require(walletSigners.length == 3);
+        require(walletSigners.length == THRESHOLD + 1);
         signers = walletSigners;
     }
 
@@ -32,42 +34,50 @@ contract MultiSigSender {
     }
     
     function submitSpend(address recipient, uint256 amount) public  {
-        uint256 index = spendTransactions.length;
-
-        // From certora counter example in spec 1
         require (recipient != address(this), "Cannot submit spend from contract to itself");
         require (recipient != address(0));
-        // From certora counter example in spec 1
+        require ( msg.sender != address(0));
         require (amount > 0, "Spend of zero not allowed");
+        require (spendTransaction.submitter == address(0), "Cannot submit against until approved"); // run 1
+        //TODO - add reset
 
-        spendTransactions.push();
-        spendTransactions[index].recipient = recipient;
-        spendTransactions[index].amount = amount;
+        spendTransaction.submitter = msg.sender;        
+        spendTransaction.recipient = recipient;
+        spendTransaction.amount = amount;
     } 
 
-    function approveSpend(uint256 transactionNo) public {
-        SpendTxn storage txn = spendTransactions[transactionNo];
-        txn.approvals[msg.sender] = true;
-        txn.approvalCount += 1;
+    function approveSpend() public {
+        require (spendTransaction.submitter != address(0), "Nothing to approve"); //  run 1
+        spendTransaction.approvals.push(msg.sender);
     }
 
-    function executeTransaction(uint256 transactionNo) public {
-        SpendTxn storage txn = spendTransactions[transactionNo];
-        (bool success, ) = txn.recipient.call{value: txn.amount}("");
+    function executeTransaction() public {
+        (bool success, ) = spendTransaction.recipient.call{value: spendTransaction.amount}("");
         require(success, "execute transaction failed");
     }
 
-    function getRecipient(uint256 txnNo) view public returns (address)  {
-        SpendTxn storage txn = spendTransactions[txnNo];
-        return txn.recipient;
+    function getRecipient() view public returns (address)  {
+        return spendTransaction.recipient;
     }
 
-    function getAmount(uint256 txnNo) view public returns (uint256)  {
-        SpendTxn storage txn = spendTransactions[txnNo];
-        return txn.amount;
+    function getAmount() view public returns (uint256)  {
+        return spendTransaction.amount;
+    }
+
+    function getSubmitter() view public returns (address)  {
+        return spendTransaction.submitter;
     }
 
     function balanceOf(address a) view public returns (uint256) {
         return a.balance;
     }
+
+    function getApprovalCount() view public returns (uint256) {
+        return spendTransaction.approvals.length;
+    }
+    
+    function getSignatureThreshold() view public returns (uint256) {
+        return THRESHOLD;
+    }
+
 }
