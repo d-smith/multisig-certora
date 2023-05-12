@@ -13,7 +13,7 @@ contract MultiSigSender {
     }
 
     // Spend transactions
-    SpendTxn[] public spendTransactions;
+    SpendTxn[]  spendTransactions;
 
     
 
@@ -52,5 +52,9 @@ contract MultiSigSender {
     function getRecipient(uint256 txnNo) view public returns (address)  {
         SpendTxn storage txn = spendTransactions[txnNo];
         return txn.recipient;
+    }
+
+    function balanceOf(address a) view public returns (uint256) {
+        return a.balance;
     }
 }
