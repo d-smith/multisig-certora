@@ -38,9 +38,9 @@ invariant validStates()
 // Todo - add rules that define valid state transition, for example await transaction transition
 // to waiting approval may only occur after submitTransactions is called
 
-// Rule: only signers may approved transactions
+// Rule: only signers may approved transactions, and not transactions they submitted
 rule signersApprove() {
     env e;
     approveSpend@withrevert(e);
-    assert !lastReverted => isSigner(e.msg.sender);
+    assert !lastReverted => isSigner(e.msg.sender) && getSubmitter() != e.msg.sender;
 }

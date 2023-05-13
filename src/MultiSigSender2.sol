@@ -5,7 +5,7 @@ contract MultiSigSender {
     uint256 public constant THRESHOLD = 2;
     
     // Signers
-    address[] signers;
+    address[3] signers;
 
     // Spend transaction
     struct SpendTxn {
@@ -21,8 +21,10 @@ contract MultiSigSender {
 
     constructor(address[] memory walletSigners) {
         require(walletSigners.length == THRESHOLD + 1);
-        signers = walletSigners;
-    }
+        signers[0] = walletSigners[0];
+        signers[1] = walletSigners[1];
+        signers[2] = walletSigners[2];
+     }
 
     function  isSigner(address s)  view public returns (bool)  {
         return signers[0] == s || signers[1] == s 
@@ -49,6 +51,7 @@ contract MultiSigSender {
     function approveSpend() public {
         require (spendTransaction.submitter != address(0), "Nothing to approve");
         require (isSigner(msg.sender), "Only signers may approve spend");
+        require (spendTransaction.submitter != msg.sender, "Signer may not approve own spend");
         spendTransaction.approvals.push(msg.sender);
     }
 
