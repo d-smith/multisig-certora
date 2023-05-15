@@ -67,6 +67,7 @@ contract MultiSigSender {
 
     function executeTransaction() public {
         require(spendTransaction.approvals.length >= THRESHOLD, "Only fully approved transactions may be approved");
+        require(isSigner(msg.sender), "Only signers may submit an approved transaction");
         (bool success, ) = spendTransaction.recipient.call{value: spendTransaction.amount}("");
         require(success, "execute transaction failed");
     }

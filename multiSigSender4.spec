@@ -63,8 +63,10 @@ invariant uniqueArraySolution(uint256 i, uint256 j)
         }
     }
 
+// Rule - transactions may only be submitted after the number of signatures meets the threshold, and
+// only by signers
 rule executionRequiredFullApproval() {
     env e;
     executeTransaction@withrevert(e);
-    assert !lastReverted => getApprovalCount() >= getSignatureThreshold();   
+    assert !lastReverted => getApprovalCount() >= getSignatureThreshold() && isSigner(e.msg.sender);   
 }
