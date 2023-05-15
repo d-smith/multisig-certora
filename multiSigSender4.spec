@@ -62,3 +62,9 @@ invariant uniqueArraySolution(uint256 i, uint256 j)
             requireInvariant frequencyLessThenTwo(getApprover(j));
         }
     }
+
+rule executionRequiredFullApproval() {
+    env e;
+    executeTransaction@withrevert(e);
+    assert !lastReverted => getApprovalCount() >= getSignatureThreshold();   
+}
