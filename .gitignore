@@ -1,3 +1,7 @@
+.zip-output-url.txt
+staging-results.tar.gz
+verify-orig.conf
+
 .certora_internal
 .certora_recent_jobs.json
 # Compiler files
