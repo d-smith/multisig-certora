@@ -5,7 +5,7 @@ contract MultiSigSender {
     uint256 public constant THRESHOLD = 2;
     
     // Signers
-    address[3] signers;
+    address[] signers;
 
     // Spend transaction
     struct SpendTxn {
@@ -19,11 +19,8 @@ contract MultiSigSender {
     SpendTxn private spendTransaction;
 
     constructor(address[] memory walletSigners) {
-        // TODO - try straight assignment or remove 3 signers hardcoding
         require(walletSigners.length == THRESHOLD + 1);
-        signers[0] = walletSigners[0];
-        signers[1] = walletSigners[1];
-        signers[2] = walletSigners[2];
+        signers = walletSigners;
      }
 
     function  isSigner(address s)  view public returns (bool)  {
