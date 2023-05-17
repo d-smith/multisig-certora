@@ -117,3 +117,15 @@ rule awaitingTxnAfterExecuteTransaction(method f) {
 
     assert f.selector == executeTransaction().selector => waitingForTxnAfter == true;
 }
+
+rule numbaGoUp(method f) {
+    env e;
+    calldataarg args;
+
+    uint256 balanceBefore = balanceOf(getRecipient());
+
+    require balanceBefore + getAmount() < max_uint256;
+    require getRecipient() != e.msg.sender;
+    f(e,args);
+    assert f.selector == executeTransaction().selector => balanceBefore == balanceOf(getRecipient()) + getAmount();
+}
