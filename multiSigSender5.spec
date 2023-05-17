@@ -63,7 +63,7 @@ invariant uniqueArraySolution(uint256 i, uint256 j)
         }
     }
 
-// Rule - transactions may only be submitted after the number of signatures meets the threshold, and
+// Rule - transactions may only be executed after the number of signatures meets the threshold, and
 // only by signers
 rule executionRequiredFullApproval() {
     env e;
@@ -85,3 +85,35 @@ rule waitForApprovalsFollowsTransactionSubmit(method f) {
     assert ((awaitingTxnBefore == true &&  awaitingApprovalsAfter == true) => f.selector == submitSpend(address,uint256).selector);
 }
 
+rule spendApprovedFollowsAwaitingApproval(method f) {
+    env e;
+    calldataarg args;
+
+    bool awaitingApprovalBefore = waitingApproval();
+    f(e,args);
+    bool readyToSpendAfter = spendApproved();
+
+    assert awaitingApprovalBefore && readyToSpendAfter => f.selector == approveSpend().selector;
+}
+
+rule awaitingTxnAfterReset(method f) {
+    env e;
+    calldataarg args;
+
+    
+    f(e,args);
+    bool waitingForTxnAfter = awaitTransaction();
+
+    assert f.selector == reset().selector => waitingForTxnAfter == true;
+}
+
+rule awaitingTxnAfterExecuteTransaction(method f) {
+    env e;
+    calldataarg args;
+
+    
+    f(e,args);
+    bool waitingForTxnAfter = awaitTransaction();
+
+    assert f.selector == executeTransaction().selector => waitingForTxnAfter == true;
+}
